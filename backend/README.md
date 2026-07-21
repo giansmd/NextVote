@@ -62,13 +62,15 @@ Puedes levantar toda la infraestructura (Base de Datos PostgreSQL y Servidor Bac
 ## Endpoints Principales
 
 - **Autenticación**: `POST /api/auth/login`, `GET /api/auth/me`
-- **Elecciones**: `GET /api/elections`, `POST /api/elections`, `POST /api/elections/:id/start`, `POST /api/elections/:id/finish`
-- **Candidatos**: `GET /api/candidates/election/:electionId`, `POST /api/candidates`
+- **Elecciones**: `GET /api/elections`, `GET /api/elections/:id`, `POST /api/elections`, `PUT /api/elections/:id`, `POST /api/elections/:id/start`, `POST /api/elections/:id/finish`, `POST /api/elections/:id/cancel`
+- **Candidatos**: `GET /api/candidates/election/:electionId`, `POST /api/candidates`, `PUT /api/candidates/:id`, `PATCH /api/candidates/:id/toggle`, `DELETE /api/candidates/:id`
+- **Usuarios / Padrón**: `GET /api/users`, `POST /api/users/import`, `PATCH /api/users/:id/toggle`
 - **Votación**:
-  - `GET /api/voting/:electionId/credential` (Emisión de token anónimo)
-  - `POST /api/voting/submit` (Envío de voto anónimo)
+  - `GET /api/voting/:electionId/credential` (Emisión/Regeneración de token anónimo para votantes no habidos)
+  - `POST /api/voting/submit` (Envío y registro del voto anónimo en la cadena)
+  - `GET /api/voting/:electionId/status` (Verificación de estado de emisión de voto)
 - **Blockchain**:
-  - `GET /api/blockchain/:electionId/blocks` (Explorador de bloques)
-  - `GET /api/blockchain/:electionId/verify` (Auditoría/Verificación de integridad de cadena)
-  - `GET /api/blockchain/:electionId/results` (Conteo de votos ponderados)
-- **Auditoría**: `GET /api/audit` (Historial de logs electorales)
+  - `GET /api/blockchain/:electionId/blocks` (Explorador de bloques de la cadena)
+  - `GET /api/blockchain/:electionId/verify` (Auditoría e inspección de integridad criptográfica)
+  - `GET /api/blockchain/:electionId/results` (Conteo oficial de votos ponderados)
+- **Auditoría**: `GET /api/audit` (Logs de actividades del sistema)

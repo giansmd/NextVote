@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-bullseye-slim AS builder
 
 WORKDIR /usr/src/app
 
@@ -13,7 +13,7 @@ COPY . .
 RUN npx prisma generate
 
 # Production stage
-FROM node:18-alpine
+FROM node:20-bullseye-slim
 
 WORKDIR /usr/src/app
 

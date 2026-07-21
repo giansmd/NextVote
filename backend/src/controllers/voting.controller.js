@@ -15,15 +15,15 @@ class VotingController {
         return res.status(400).json({ error: 'Election is not active' });
       }
 
-      // 2. Verify user has not voted yet (or generated a token)
+      // 2. Verify user has not voted yet
       const existingCred = await prisma.credential.findUnique({
         where: {
           electionId_userId: { electionId, userId }
         }
       });
 
-      if (existingCred) {
-        return res.status(403).json({ error: 'User already requested a credential for this election' });
+      if (existingCred && existingCred.usedAt !== null) {
+        return res.status(403).json({ error: 'Ya has emitido tu voto en esta elección.' });
       }
 
       // 3. Determine weight (Teacher = 3, Student = 1)
@@ -34,19 +34,26 @@ class VotingController {
       const rawToken = cryptoUtils.generateAnonymousToken();
       const tokenHash = cryptoUtils.hashSHA256(`${rawToken}-${electionId}`);
 
-      // 5. Save credential
+      // 5. Save or update credential
       const expiresAt = new Date();
       expiresAt.setMinutes(expiresAt.getMinutes() + 15); // Valid for 15 minutes
 
-      await prisma.credential.create({
-        data: {
-          tokenHash,
-          electionId,
-          userId,
-          weight,
-          expiresAt
-        }
-      });
+      if (existingCred) {
+        await prisma.credential.update({
+          where: { id: existingCred.id },
+          data: { tokenHash, expiresAt }
+        });
+      } else {
+        await prisma.credential.create({
+          data: {
+            tokenHash,
+            electionId,
+            userId,
+            weight,
+            expiresAt
+          }
+        });
+      }
 
       await prisma.auditLog.create({
         data: {
