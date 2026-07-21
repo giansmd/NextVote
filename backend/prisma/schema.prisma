@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(STUDENT)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+
+  student       Student?
+  teacher       Teacher?
+  electionsCreated Election[]
+  auditLogs     AuditLog[]
+  credentials   Credential[]
+}
+
+enum Role {
+  ADMIN
+  STUDENT
+  TEACHER
+}
+
+model Student {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id])
+  studentCode        String   @unique
+  fullName           String
+  faculty            String?
+  school             String?
+  institutionalEmail String   @unique
+  isEnabled          Boolean  @default(true)
+}
+
+model Teacher {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id])
+  teacherCode        String   @unique
+  fullName           String
+  faculty            String?
+  department         String?
+  institutionalEmail String   @unique
+  isEnabled          Boolean  @default(true)
+}
+
+model Election {
+  id             String    @id @default(uuid())
+  name           String
+  description    String?
+  academicPeriod String
+  category       String
+  faculty        String?
+  school         String?
+  startDate      DateTime
+  startTime      String
+  endDate        DateTime
+  endTime        String
+  status         ElectionStatus @default(SCHEDULED)
+  observations   String?
+  createdBy      String
+  creator        User      @relation(fields: [createdBy], references: [id])
+
+  candidates     Candidate[]
+  credentials    Credential[]
+  blocks         Block[]
+}
+
+enum ElectionStatus {
+  SCHEDULED
+  ACTIVE
+  FINALIZED
+  CANCELLED
+}
+
+model Candidate {
+  id                String   @id @default(uuid())
+  electionId        String
+  election          Election @relation(fields: [electionId], references: [id])
+  fullName          String
+  photoUrl          String?
+  listNumber        String
+  politicalMovement String?
+  position          String
+  faculty           String?
+  school            String?
+  workPlan          String?
+  status            CandidateStatus @default(ACTIVE)
+}
+
+enum CandidateStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Credential {
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
+  electionId String
+  election   Election  @relation(fields: [electionId], references: [id])
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  weight     Int       @default(1) // 3 for teacher, 1 for student
+  issuedAt   DateTime  @default(now())
+  expiresAt  DateTime
+  usedAt     DateTime?
+  isRevoked  Boolean   @default(false)
+
+  @@unique([electionId, userId])
+}
+
+model Block {
+  id           String   @id @default(uuid())
+  index        Int
+  timestamp    DateTime @default(now())
+  previousHash String
+  voteHash     String
+  encryptedVote String
+  nonce        String
+  merkleRoot   String
+  signature    String
+  blockHash    String   @unique
+  electionId   String
+  election     Election @relation(fields: [electionId], references: [id])
+  isDummy      Boolean  @default(false)
+  weight       Int      @default(1)
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  details     Json?
+  createdAt   DateTime @default(now())
+}
