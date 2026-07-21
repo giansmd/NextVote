@@ -1,0 +1,17 @@
+module.exports = {
+  ROLES: {
+    ADMIN: 'ADMIN',
+    STUDENT: 'STUDENT',
+    TEACHER: 'TEACHER'
+  },
+  ELECTION_STATUS: {
+    SCHEDULED: 'SCHEDULED',
+    ACTIVE: 'ACTIVE',
+    FINALIZED: 'FINALIZED',
+    CANCELLED: 'CANCELLED'
+  },
+  VOTE_WEIGHTS: {
+    STUDENT: 1,
+    TEACHER: 3
+  }
+};
