@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { AuthContext } from '../context/AuthContext';
 import { ShieldCheck, User as UserIcon, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const Voting = () => {
