@@ -41,7 +41,7 @@ class AuthController {
         });
 
         if (hasVoted) {
-          return res.status(403).json({ error: 'Ya has emitido tu voto en el sistema. No puedes ingresar nuevamente.' });
+          return res.status(403).json({ error: 'Ha emitido sus votos completos. No puede ingresar por segunda vez.' });
         }
       }
 
