@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const electionController = require('../controllers/election.controller');
-const { requireAuth, requireRole } = require('../middleware/auth.middleware');
+const { requireAuth, optionalAuth, requireRole } = require('../middleware/auth.middleware');
 
-router.get('/', requireAuth, electionController.getElections);
+router.get('/', optionalAuth, electionController.getElections);
 router.get('/:id', requireAuth, electionController.getElectionById);
 
 router.post('/', requireAuth, requireRole('ADMIN'), electionController.createElection);

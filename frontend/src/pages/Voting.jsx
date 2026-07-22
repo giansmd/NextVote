@@ -16,6 +16,8 @@ const Voting = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [pendingElections, setPendingElections] = useState([]);
+  const [election, setElection] = useState(null);
 
   useEffect(() => {
     const initializeVoting = async () => {
@@ -27,6 +29,18 @@ const Voting = () => {
         // 2. Fetch candidates for this election
         const candResponse = await api.get(`/candidates/election/${electionId}`);
         setCandidates(candResponse.data);
+
+        // 3. Fetch other elections to check for pending active votes
+        const electionsRes = await api.get('/elections');
+        const activePending = electionsRes.data.filter(
+          el => el.status === 'ACTIVE' && el.id !== electionId && !el.hasVoted
+        );
+        setPendingElections(activePending);
+
+        const currentEl = electionsRes.data.find(el => el.id === electionId);
+        if (currentEl) {
+          setElection(currentEl);
+        }
         
       } catch (err) {
         console.error('Error initializing voting:', err);
@@ -62,7 +76,7 @@ const Voting = () => {
 
   useEffect(() => {
     let timer;
-    if (success) {
+    if (success && pendingElections.length === 0) {
       timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
@@ -76,7 +90,7 @@ const Voting = () => {
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [success, logout, navigate]);
+  }, [success, pendingElections, logout, navigate]);
 
   if (loading) {
     return (
@@ -110,22 +124,49 @@ const Voting = () => {
           <CheckCircle2 size={40} />
         </div>
         <h2 className="text-2xl font-bold text-slate-900 mb-2">¡Voto Registrado Exitosamente!</h2>
-        <p className="text-slate-500 mb-4">
+        <p className="text-slate-500 mb-6">
           Tu voto ha sido encriptado e integrado en la cadena de bloques. Ya no puede ser modificado y tu anonimato está garantizado.
         </p>
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-6 inline-block">
-          <p className="text-sm font-medium text-blue-900">
-            Cerrando sesión automáticamente en <span className="font-bold text-primary text-lg">{countdown}</span> segundos por seguridad...
-          </p>
-        </div>
-        <div>
-          <button 
-            onClick={() => { logout(); navigate('/login'); }}
-            className="bg-primary hover:bg-blue-900 text-white px-8 py-3 rounded-lg shadow-sm font-medium transition-colors"
-          >
-            Cerrar Sesión Ahora
-          </button>
-        </div>
+
+        {pendingElections.length > 0 ? (
+          <div className="space-y-6">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 max-w-md mx-auto">
+              <p className="text-sm font-semibold text-amber-800">
+                Aún tienes {pendingElections.length} {pendingElections.length === 1 ? 'votación activa pendiente' : 'votaciones activas pendientes'}.
+              </p>
+            </div>
+            <div className="flex justify-center gap-4">
+              <button 
+                onClick={() => navigate('/elections')}
+                className="bg-primary hover:bg-blue-900 text-white px-8 py-3 rounded-lg shadow-sm font-semibold transition-colors"
+              >
+                Continuar Votando
+              </button>
+              <button 
+                onClick={() => { logout(); navigate('/login'); }}
+                className="border border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-3 rounded-lg font-semibold transition-colors"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 mb-2 inline-block">
+              <p className="text-sm font-medium text-blue-900">
+                Cerrando sesión automáticamente en <span className="font-bold text-primary text-lg">{countdown}</span> segundos por seguridad...
+              </p>
+            </div>
+            <div>
+              <button 
+                onClick={() => { logout(); navigate('/login'); }}
+                className="bg-primary hover:bg-blue-900 text-white px-8 py-3 rounded-lg shadow-sm font-semibold transition-colors animate-pulse"
+              >
+                Cerrar Sesión Ahora
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -137,8 +178,8 @@ const Voting = () => {
           <ShieldCheck size={16} />
           <span>Entorno Seguro de Votación</span>
         </div>
-        <h1 className="text-3xl font-bold text-slate-900">Selecciona a tu Candidato</h1>
-        <p className="text-slate-500 mt-2">Revisa las propuestas y emite tu voto. Este proceso es anónimo e irreversible.</p>
+        <h1 className="text-3xl font-bold text-slate-900">{election ? election.name : 'Selecciona a tu Candidato'}</h1>
+        <p className="text-slate-500 mt-2">{election ? election.description : 'Revisa las propuestas y emite tu voto. Este proceso es anónimo e irreversible.'}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

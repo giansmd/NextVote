@@ -31,13 +31,6 @@ const Login = () => {
         return;
       }
 
-      const response = await api.get('/elections');
-      const activeElection = response.data.find(el => el.status === 'ACTIVE');
-      if (activeElection) {
-        navigate(`/vote/${activeElection.id}`);
-        return;
-      }
-      
       navigate('/elections');
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Error al iniciar sesión. Verifique sus credenciales.');

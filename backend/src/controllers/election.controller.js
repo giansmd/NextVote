@@ -37,16 +37,98 @@ class ElectionController {
 
   async getElections(req, res) {
     try {
-      const elections = await prisma.election.findMany({
-        orderBy: { startDate: 'desc' },
-        include: {
-          candidates: true,
-          _count: {
-            select: { blocks: true, credentials: true }
-          }
+      const user = req.user;
+      let whereClause = {};
+
+      if (user) {
+        const { role, userId } = user;
+        if (role === 'STUDENT') {
+          const student = await prisma.student.findUnique({ where: { userId } });
+          const faculty = student?.faculty;
+          
+          whereClause = {
+            OR: [
+              { category: 'Rectoría' },
+              { category: 'Asamblea Universitaria - Estudiantes' },
+              { category: 'Consejo Universitario - Estudiantes' },
+              { 
+                AND: [
+                  { category: 'Decanato' },
+                  { faculty }
+                ]
+              },
+              {
+                AND: [
+                  { category: 'Consejo de Facultad - Estudiantes' },
+                  { faculty }
+                ]
+              }
+            ]
+          };
+        } else if (role === 'TEACHER') {
+          const teacher = await prisma.teacher.findUnique({ where: { userId } });
+          const faculty = teacher?.faculty;
+          
+          whereClause = {
+            OR: [
+              { category: 'Rectoría' },
+              { category: 'Asamblea Universitaria - Docentes' },
+              { 
+                AND: [
+                  { category: 'Decanato' },
+                  { faculty }
+                ]
+              },
+              {
+                AND: [
+                  { category: 'Consejo de Facultad - Docentes' },
+                  { faculty }
+                ]
+              },
+              {
+                AND: [
+                  { category: 'Departamento Académico' },
+                  { faculty }
+                ]
+              }
+            ]
+          };
         }
+      }
+
+      const includeOptions = {
+        candidates: true,
+        _count: {
+          select: { blocks: true, credentials: true }
+        }
+      };
+
+      if (user) {
+        includeOptions.credentials = {
+          where: { userId: user.userId },
+          select: { usedAt: true }
+        };
+      }
+
+      const elections = await prisma.election.findMany({
+        where: whereClause,
+        orderBy: { startDate: 'desc' },
+        include: includeOptions
       });
-      res.json(elections);
+
+      const formattedElections = elections.map(el => {
+        const userCredential = el.credentials ? el.credentials[0] : null;
+        const hasVoted = userCredential ? userCredential.usedAt !== null : false;
+        
+        // Remove credentials array to prevent leak of user context
+        const { credentials, ...rest } = el;
+        return {
+          ...rest,
+          hasVoted
+        };
+      });
+
+      res.json(formattedElections);
     } catch (error) {
       console.error('Error fetching elections:', error);
       res.status(500).json({ error: 'Internal server error' });

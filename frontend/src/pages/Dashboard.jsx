@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
-import { Calendar, Clock, ChevronRight, Activity, Archive, LayoutGrid } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, Activity, Archive, LayoutGrid, CheckCircle2 } from 'lucide-react';
 
 const Dashboard = () => {
   const [elections, setElections] = useState([]);
@@ -26,26 +26,33 @@ const Dashboard = () => {
     fetchElections();
   }, []);
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'ACTIVE':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 flex items-center gap-1"><Activity size={12}/> Activa</span>;
+  const getStatusBadge = (election) => {
+    if (election.status === 'ACTIVE') {
+      if (election.hasVoted) {
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 flex items-center gap-1"><CheckCircle2 size={12}/> Voto Emitido</span>;
+      }
+      return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 flex items-center gap-1"><Activity size={12}/> Activa</span>;
+    }
+    switch (election.status) {
       case 'SCHEDULED':
         return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 flex items-center gap-1"><Clock size={12}/> Programada</span>;
       case 'FINALIZED':
         return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 flex items-center gap-1"><Archive size={12}/> Finalizada</span>;
       default:
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{status}</span>;
+        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{election.status}</span>;
     }
   };
 
   const handleAction = (election) => {
     if (election.status === 'ACTIVE' && user.role !== 'ADMIN') {
-      navigate(`/vote/${election.id}`);
+      if (election.hasVoted) {
+        navigate(`/blockchain/${election.id}`);
+      } else {
+        navigate(`/vote/${election.id}`);
+      }
     } else if (election.status === 'FINALIZED') {
       navigate(`/blockchain/${election.id}`);
     } else if (user.role === 'ADMIN') {
-      // Admin dashboard functionality for managing could be here.
       navigate(`/blockchain/${election.id}`);
     }
   };
@@ -77,7 +84,7 @@ const Dashboard = () => {
                   <div className="p-2 bg-blue-50 text-primary rounded-lg">
                     <LayoutGrid size={20} />
                   </div>
-                  {getStatusBadge(election.status)}
+                   {getStatusBadge(election)}
                 </div>
                 
                 <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 line-clamp-2">
@@ -106,7 +113,7 @@ const Dashboard = () => {
                   className="w-full flex items-center justify-between text-sm font-semibold text-primary hover:text-blue-800 transition-colors"
                 >
                   <span>
-                    {election.status === 'ACTIVE' && user.role !== 'ADMIN' ? 'Ingresar a Votar' : 
+                    {election.status === 'ACTIVE' && user.role !== 'ADMIN' ? (election.hasVoted ? 'Ver Blockchain y Resultados' : 'Ingresar a Votar') : 
                      election.status === 'FINALIZED' ? 'Ver Resultados y Auditoría' : 
                      user.role === 'ADMIN' ? 'Gestionar Elección' : 'Ver Detalles'}
                   </span>
