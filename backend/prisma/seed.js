@@ -106,7 +106,25 @@ async function main() {
       }
     }
   });
-  console.log('✅ Usuarios Estudiantes creados (juan.quispe, ana.flores / estudiante123)');
+
+  const student3User = await prisma.user.create({
+    data: {
+      email: 'gsamana@unitru.edu.pe',
+      passwordHash: studentPasswordHash,
+      role: 'STUDENT',
+      isActive: true,
+      student: {
+        create: {
+          studentCode: 'EST-2023-2011',
+          fullName: 'Gian Franco Miguel Gonzalo Samana Ramirez',
+          faculty: 'Facultad de Ingeniería',
+          school: 'Escuela de Ingeniería de Sistemas',
+          institutionalEmail: 'gsamana@unitru.edu.pe'
+        }
+      }
+    }
+  });
+  console.log('✅ Usuarios Estudiantes creados (juan.quispe, ana.flores, gsamana / estudiante123)');
 
   // 4. Crear Elección General (21 al 22 de Julio 2026)
   const startDate = new Date('2026-07-21T08:00:00Z');
