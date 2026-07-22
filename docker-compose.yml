@@ -42,5 +42,17 @@ services:
     depends_on:
       - backend
 
+  bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: nextvote-bot
+    restart: always
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-your_discord_bot_token_here}
+      - API_URL=http://backend:3000/api
+    depends_on:
+      - backend
+
 volumes:
   pgdata:
