@@ -12,6 +12,12 @@ const AdminDashboard = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Filter States
+  const [electionFilter, setElectionFilter] = useState('ALL');
+  const [userRoleFilter, setUserRoleFilter] = useState('ALL');
+  const [userSearch, setUserSearch] = useState('');
+  const [auditSearch, setAuditSearch] = useState('');
+
   // New Election Form Modal
   const [showElectionModal, setShowElectionModal] = useState(false);
   const [electionForm, setElectionForm] = useState({
@@ -162,8 +168,23 @@ const AdminDashboard = () => {
         </div>
       ) : activeTab === 'elections' ? (
         <div className="space-y-4">
+          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <Search size={16} className="text-slate-400" /> Filtros
+            </h3>
+            <select 
+              value={electionFilter} 
+              onChange={(e) => setElectionFilter(e.target.value)}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">Todos los Estados</option>
+              <option value="ACTIVE">Activas</option>
+              <option value="SCHEDULED">Programadas</option>
+              <option value="FINALIZED">Finalizadas</option>
+            </select>
+          </div>
           <div className="grid grid-cols-1 gap-4">
-            {elections.map((el) => (
+            {elections.filter(el => electionFilter === 'ALL' ? true : el.status === electionFilter).map((el) => (
               <div key={el.id} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -217,11 +238,35 @@ const AdminDashboard = () => {
         </div>
       ) : activeTab === 'users' ? (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-            <h3 className="font-bold text-slate-800">Padrón de Electores Registrados</h3>
-            <span className="text-xs font-semibold bg-blue-100 text-primary px-2.5 py-1 rounded-full">
-              Total: {users.length} Usuarios
-            </span>
+          <div className="p-4 border-b border-slate-100 flex flex-col md:flex-row md:justify-between md:items-center gap-4 bg-slate-50">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-slate-800">Padrón de Electores Registrados</h3>
+              <span className="text-xs font-semibold bg-blue-100 text-primary px-2.5 py-1 rounded-full">
+                Total: {users.length}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Buscar por email..." 
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <select 
+                value={userRoleFilter} 
+                onChange={(e) => setUserRoleFilter(e.target.value)}
+                className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="ALL">Todos los Roles</option>
+                <option value="ADMIN">Administradores</option>
+                <option value="TEACHER">Docentes</option>
+                <option value="STUDENT">Estudiantes</option>
+              </select>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
@@ -234,7 +279,9 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {users.map((u) => (
+                {users
+                  .filter(u => (userRoleFilter === 'ALL' ? true : u.role === userRoleFilter) && u.email.toLowerCase().includes(userSearch.toLowerCase()))
+                  .map((u) => (
                   <tr key={u.id}>
                     <td className="px-6 py-4 font-medium text-slate-900">{u.email}</td>
                     <td className="px-6 py-4">
@@ -261,8 +308,18 @@ const AdminDashboard = () => {
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-slate-100 bg-slate-50">
+          <div className="p-4 border-b border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="font-bold text-slate-800">Logs de Auditoría y Seguridad</h3>
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Buscar por acción..." 
+                value={auditSearch}
+                onChange={(e) => setAuditSearch(e.target.value)}
+                className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-slate-200">
@@ -274,7 +331,9 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {logs.map((log) => (
+                {logs
+                  .filter(log => log.action.toLowerCase().includes(auditSearch.toLowerCase()))
+                  .map((log) => (
                   <tr key={log.id}>
                     <td className="px-6 py-4 font-mono text-xs text-slate-800">{log.action}</td>
                     <td className="px-6 py-4 text-slate-500 text-xs">{log.ipAddress || '127.0.0.1'}</td>
