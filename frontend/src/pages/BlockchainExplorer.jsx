@@ -12,6 +12,10 @@ const BlockchainExplorer = () => {
   const [verification, setVerification] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('results'); // 'results' or 'blocks'
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filterType, setFilterType] = useState('ALL'); // 'ALL', 'REAL'
+  const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +49,18 @@ const BlockchainExplorer = () => {
 
   // Calculate total votes for percentage
   const totalVotes = results.reduce((acc, curr) => acc + (curr.weightedVotes || 0), 0);
+
+  // Pagination and Filtering
+  const filteredBlocks = blocks.filter(b => {
+    if (filterType === 'REAL') return !b.isDummy && b.index > 0;
+    return true;
+  });
+
+  const totalPages = Math.ceil(filteredBlocks.length / itemsPerPage);
+  const paginatedBlocks = filteredBlocks.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -149,7 +165,20 @@ const BlockchainExplorer = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">Registro Inmutable (Ledger)</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+            <h2 className="text-xl font-bold text-slate-800">Registro Inmutable (Ledger)</h2>
+            <select 
+              value={filterType} 
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            >
+              <option value="ALL">Todos los Registros</option>
+              <option value="REAL">Solo Votos Reales</option>
+            </select>
+          </div>
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-slate-200">
@@ -162,7 +191,7 @@ const BlockchainExplorer = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-100">
-                  {blocks.map((block) => (
+                  {paginatedBlocks.map((block) => (
                     <tr key={block.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -203,13 +232,36 @@ const BlockchainExplorer = () => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                        {new Date(block.timestamp).toLocaleString()}
+                        {new Date(block.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-slate-50">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm disabled:opacity-50 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                >
+                  Anterior
+                </button>
+                <span className="text-sm text-slate-600 font-medium">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm disabled:opacity-50 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                >
+                  Siguiente
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

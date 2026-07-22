@@ -87,14 +87,14 @@ const Login = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Identificador (DNI, Código o Email)
+                  Identificador (Código o Email)
                 </label>
                 <input
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors text-sm"
-                  placeholder="12345678 / U20210000 / tu@unitru.edu.pe"
+                  placeholder="U20210000 / tu@unitru.edu.pe"
                   required
                 />
               </div>

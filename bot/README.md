@@ -89,8 +89,8 @@ docker-compose up -d --build bot
 | Comando | Parámetros | Descripción |
 | :--- | :--- | :--- |
 | `/vote` | `email`, `password`, `candidato` | Emite un voto anónimo en la elección activa (Solo en DM). |
-| `/resultados` | *Ninguno* | Muestra el conteo de puntos ponderados en tiempo real. |
-| `/verificar` | *Ninguno* | Audita e inspecciona la integridad matemática de la Blockchain. |
+| `/resultados` | `eleccion` (opcional) | Consulta los resultados en tiempo real de una elección específica o la primera elección activa si no se proporciona ninguna. Muestra el conteo de puntos ponderados acumulados por cada candidato en función de los votos reales emitidos. |
+| `/verificar` | `eleccion` (opcional) | Audita e inspecciona la integridad matemática de la Blockchain para una elección específica o la primera elección activa. Verifica los enlaces criptográficos de los bloques y detecta anomalías. |
 
 ---
 

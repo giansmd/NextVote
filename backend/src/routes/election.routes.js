@@ -4,7 +4,7 @@ const electionController = require('../controllers/election.controller');
 const { requireAuth, optionalAuth, requireRole } = require('../middleware/auth.middleware');
 
 router.get('/', optionalAuth, electionController.getElections);
-router.get('/:id', requireAuth, electionController.getElectionById);
+router.get('/:id', optionalAuth, electionController.getElectionById);
 
 router.post('/', requireAuth, requireRole('ADMIN'), electionController.createElection);
 router.put('/:id', requireAuth, requireRole('ADMIN'), electionController.updateElection);

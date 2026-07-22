@@ -124,12 +124,6 @@ const AdminDashboard = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <button 
-            onClick={() => setShowElectionModal(true)}
-            className="bg-primary hover:bg-blue-900 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors shadow-sm"
-          >
-            <Plus size={16} /> Crear Elección
-          </button>
         </div>
       </div>
 
