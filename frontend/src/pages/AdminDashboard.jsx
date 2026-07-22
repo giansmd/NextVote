@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import * as XLSX from 'xlsx';
 import { 
   Vote, Users, ShieldAlert, FileText, Plus, Play, Square, XCircle, 
   UserPlus, Upload, RefreshCw, CheckCircle, Search 
@@ -115,6 +116,45 @@ const AdminDashboard = () => {
         alert(err.response?.data?.error || 'Error al finalizar la elección');
       }
     }
+  };
+
+  const handleImportUsers = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+      const usersToImport = jsonData.map(row => ({
+        email: row.email || row.Email || row.EMAIL,
+        password: String(row.password || row.Password || row.PASSWORD || '123456'),
+        role: (row.role || row.Role || row.ROLE || 'STUDENT').toUpperCase(),
+        fullName: row.fullName || row.FullName || row.nombre || row.Nombre,
+        code: String(row.code || row.Code || row.codigo || row.Codigo),
+        faculty: row.faculty || row.Faculty || row.facultad || row.Facultad || 'General',
+        school: row.school || row.School || row.escuela || row.Escuela || 'General',
+        department: row.department || row.Department || row.departamento || row.Departamento || 'General'
+      }));
+
+      if (usersToImport.length === 0) {
+        alert('El archivo está vacío o no tiene el formato correcto.');
+        setLoading(false);
+        return;
+      }
+
+      await api.post('/users/import', { users: usersToImport });
+      alert(`Se importaron ${usersToImport.length} usuarios exitosamente.`);
+      fetchData();
+    } catch (error) {
+      console.error('Error importando:', error);
+      alert('Error al importar el archivo. Verifica que las columnas sean correctas.');
+      setLoading(false);
+    }
+    e.target.value = '';
   };
 
   return (
@@ -246,6 +286,15 @@ const AdminDashboard = () => {
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
+              <label className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 cursor-pointer transition-colors">
+                <Upload size={14} /> Importar Padrón (Excel)
+                <input 
+                  type="file" 
+                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
+                  className="hidden" 
+                  onChange={handleImportUsers} 
+                />
+              </label>
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input 

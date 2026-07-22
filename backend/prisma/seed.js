@@ -126,6 +126,57 @@ async function main() {
   });
   console.log('✅ Usuarios Estudiantes creados (juan.quispe, ana.flores, gsamana / estudiante123)');
 
+  // 3.5 Generar 5 docentes y 20 estudiantes adicionales
+  const extraTeachers = [];
+  for (let i = 1; i <= 5; i++) {
+    extraTeachers.push(
+      prisma.user.create({
+        data: {
+          email: `docente.extra${i}@unitru.edu.pe`,
+          passwordHash: teacherPasswordHash,
+          role: 'TEACHER',
+          isActive: true,
+          teacher: {
+            create: {
+              teacherCode: `DOC-EXT-${i}`,
+              fullName: `Docente Extra ${i}`,
+              faculty: 'Facultad de Ingeniería',
+              department: 'Ciencias Básicas',
+              institutionalEmail: `docente.extra${i}@unitru.edu.pe`
+            }
+          }
+        }
+      })
+    );
+  }
+  await Promise.all(extraTeachers);
+  console.log('✅ 5 Docentes adicionales generados.');
+
+  const extraStudents = [];
+  for (let i = 1; i <= 20; i++) {
+    extraStudents.push(
+      prisma.user.create({
+        data: {
+          email: `estudiante.extra${i}@unitru.edu.pe`,
+          passwordHash: studentPasswordHash,
+          role: 'STUDENT',
+          isActive: true,
+          student: {
+            create: {
+              studentCode: `EST-EXT-${i}`,
+              fullName: `Estudiante Extra ${i}`,
+              faculty: 'Facultad de Ingeniería',
+              school: 'Ingeniería de Sistemas',
+              institutionalEmail: `estudiante.extra${i}@unitru.edu.pe`
+            }
+          }
+        }
+      })
+    );
+  }
+  await Promise.all(extraStudents);
+  console.log('✅ 20 Estudiantes adicionales generados.');
+
   // 4. Crear Elección General (21 al 22 de Julio 2026)
   const startDate = new Date('2026-07-21T08:00:00Z');
   const endDate = new Date('2026-07-22T18:00:00Z');

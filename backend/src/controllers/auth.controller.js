@@ -31,6 +31,20 @@ class AuthController {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
 
+      // Check if user has already voted
+      if (user.role !== 'ADMIN') {
+        const hasVoted = await prisma.credential.findFirst({
+          where: {
+            userId: user.id,
+            usedAt: { not: null }
+          }
+        });
+
+        if (hasVoted) {
+          return res.status(403).json({ error: 'Ya has emitido tu voto en el sistema. No puedes ingresar nuevamente.' });
+        }
+      }
+
       // Generate JWT
       const token = jwt.sign(
         { 
