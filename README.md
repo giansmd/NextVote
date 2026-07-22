@@ -59,6 +59,10 @@ Una vez ejecutado el comando de seed, puedes usar las siguientes credenciales pa
 - **Docentes:** `carlos.mendoza@unitru.edu.pe`, `maria.torres@unitru.edu.pe` / Contraseña: `docente123`
 - **Estudiantes:** `juan.quispe@unitru.edu.pe`, `ana.flores@unitru.edu.pe` / Contraseña: `estudiante123`
 
+## 🤖 Bot de Discord
+
+El proyecto cuenta con un bot de Discord integrado con soporte para votación anónima vía DM, autocompletado de candidatos, resultados ponderados e inspección de Blockchain. Consulta la guía completa de uso y configuración en el [README del Bot](file:///c:/Users/WIND%2011/Documents/Marck/Coding/Projects-2026/proyecto-votacion/bot/README.md).
+
 ## Comandos Útiles
 
 - **Ver logs del backend:** `docker logs -f nextvote-backend`
