@@ -21,4 +21,4 @@ RUN sed -i 's/index  index.html index.htm;/index  index.html index.htm;\n       
 # Expose port
 EXPOSE 80
 
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["sh", "-c", "sed -i 's/listen[[:space:]]*80;/listen '\"${PORT:-80}\"';/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

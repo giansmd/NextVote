@@ -12,24 +12,44 @@ export class VotingService {
     return this.configService.get<string>('API_URL') || 'http://localhost:3000/api';
   }
 
-  async getActiveElection(token?: string): Promise<any> {
+  async getActiveElections(query?: string): Promise<any[]> {
     try {
+      const res = await axios.get(`${this.apiUrl}/elections`);
+      const elections = res.data || [];
+      const activeElections = elections.filter((e: any) => e.status === 'ACTIVE');
+      if (query) {
+        const q = query.toLowerCase();
+        return activeElections.filter((e: any) => e.name.toLowerCase().includes(q));
+      }
+      return activeElections;
+    } catch (error: any) {
+      this.logger.error('Error fetching active elections:', error?.response?.data || error.message);
+      return [];
+    }
+  }
+
+  async getActiveElection(electionId?: string, token?: string): Promise<any> {
+    try {
+      if (electionId) {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await axios.get(`${this.apiUrl}/elections/${electionId}`, { headers });
+        return res.data;
+      }
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await axios.get(`${this.apiUrl}/elections`, { headers });
       const elections = res.data || [];
       return elections.find((e: any) => e.status === 'ACTIVE') || elections[0] || null;
     } catch (error: any) {
-      this.logger.error('Error fetching elections:', error?.response?.data || error.message);
+      this.logger.error('Error fetching active election:', error?.response?.data || error.message);
       return null;
     }
   }
 
-  async getCandidates(query?: string): Promise<{ id: string; fullName: string; listNumber: string; politicalMovement: string }[]> {
+  async getCandidates(electionId: string, query?: string): Promise<{ id: string; fullName: string; listNumber: string; politicalMovement: string }[]> {
     try {
-      const activeElection = await this.getActiveElection();
-      if (!activeElection) return [];
+      if (!electionId) return [];
 
-      const res = await axios.get(`${this.apiUrl}/candidates/election/${activeElection.id}`);
+      const res = await axios.get(`${this.apiUrl}/candidates/election/${electionId}`);
       const candidates = res.data || [];
 
       if (query) {
@@ -47,7 +67,7 @@ export class VotingService {
     }
   }
 
-  async castVote(email: string, password: string, candidateId: string): Promise<string> {
+  async castVote(electionId: string, email: string, password: string, candidateId: string): Promise<string> {
     try {
       // 1. Authenticate user
       const authRes = await axios.post(`${this.apiUrl}/auth/login`, { email, password });
@@ -58,9 +78,9 @@ export class VotingService {
       }
 
       // 2. Obtain active election
-      const activeElection = await this.getActiveElection(jwtToken);
+      const activeElection = await this.getActiveElection(electionId, jwtToken);
       if (!activeElection || activeElection.status !== 'ACTIVE') {
-        return '❌ **No hay elecciones activas** en este momento para emitir un voto.';
+        return '❌ **La elección seleccionada no está activa** en este momento para emitir un voto.';
       }
 
       // 3. Request anonymous credential token
@@ -93,9 +113,9 @@ export class VotingService {
     }
   }
 
-  async getResults(): Promise<string> {
+  async getResults(electionId?: string): Promise<string> {
     try {
-      const activeElection = await this.getActiveElection();
+      const activeElection = await this.getActiveElection(electionId);
       if (!activeElection) {
         return '❌ No hay información de elecciones activas.';
       }
@@ -120,9 +140,9 @@ export class VotingService {
     }
   }
 
-  async verifyIntegrity(): Promise<string> {
+  async verifyIntegrity(electionId?: string): Promise<string> {
     try {
-      const activeElection = await this.getActiveElection();
+      const activeElection = await this.getActiveElection(electionId);
       if (!activeElection) {
         return '❌ No hay elecciones activas para verificar.';
       }

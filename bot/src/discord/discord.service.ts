@@ -38,11 +38,20 @@ export class DiscordService implements OnModuleInit {
     });
 
     this.client.on(Events.InteractionCreate, async (interaction) => {
-      // 1. Autocomplete for candidates
+      // 1. Autocomplete handling
       if (interaction.isAutocomplete()) {
-        if (interaction.commandName === 'vote') {
-          const focusedValue = interaction.options.getFocused();
-          const candidates = await this.votingService.getCandidates(focusedValue);
+        const focusedOption = interaction.options.getFocused(true);
+        if (focusedOption.name === 'eleccion') {
+          const elections = await this.votingService.getActiveElections(focusedOption.value);
+          await interaction.respond(
+            elections.slice(0, 25).map(e => ({
+              name: e.name,
+              value: e.id
+            }))
+          );
+        } else if (focusedOption.name === 'candidato') {
+          const electionId = interaction.options.getString('eleccion', true);
+          const candidates = await this.votingService.getCandidates(electionId, focusedOption.value);
           await interaction.respond(
             candidates.slice(0, 25).map(c => ({
               name: `Lista ${c.listNumber}: ${c.fullName} (${c.politicalMovement || 'Independiente'})`,
@@ -65,6 +74,7 @@ export class DiscordService implements OnModuleInit {
           return;
         }
 
+        const electionId = interaction.options.getString('eleccion', true);
         const email = interaction.options.getString('email', true);
         const password = interaction.options.getString('password', true);
         const candidateId = interaction.options.getString('candidato', true);
@@ -72,7 +82,7 @@ export class DiscordService implements OnModuleInit {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         try {
-          const result = await this.votingService.castVote(email, password, candidateId);
+          const result = await this.votingService.castVote(electionId, email, password, candidateId);
           await interaction.editReply({ content: result });
         } catch (error: any) {
           await interaction.editReply({ content: `❌ Error al votar: ${error.message}` });
@@ -82,14 +92,16 @@ export class DiscordService implements OnModuleInit {
       // 3. Handle /resultados command
       if (interaction.commandName === 'resultados') {
         await interaction.deferReply();
-        const results = await this.votingService.getResults();
+        const electionId = interaction.options.getString('eleccion') || undefined;
+        const results = await this.votingService.getResults(electionId);
         await interaction.editReply({ content: results });
       }
 
       // 4. Handle /verificar command
       if (interaction.commandName === 'verificar') {
         await interaction.deferReply();
-        const verification = await this.votingService.verifyIntegrity();
+        const electionId = interaction.options.getString('eleccion') || undefined;
+        const verification = await this.votingService.verifyIntegrity(electionId);
         await interaction.editReply({ content: verification });
       }
     });
@@ -116,8 +128,15 @@ export class DiscordService implements OnModuleInit {
     const commands = [
       {
         name: 'vote',
-        description: 'Emitir voto anónimo en la elección activa',
+        description: 'Emitir voto anónimo en una elección activa',
         options: [
+          {
+            name: 'eleccion',
+            description: 'Selecciona el proceso electoral activo',
+            type: 3, // STRING
+            required: true,
+            autocomplete: true,
+          },
           {
             name: 'email',
             description: 'Tu correo institucional (@unitru.edu.pe)',
@@ -142,10 +161,28 @@ export class DiscordService implements OnModuleInit {
       {
         name: 'resultados',
         description: 'Consultar los resultados y conteo ponderado de votos en tiempo real',
+        options: [
+          {
+            name: 'eleccion',
+            description: 'Selecciona el proceso electoral (opcional)',
+            type: 3, // STRING
+            required: false,
+            autocomplete: true,
+          }
+        ]
       },
       {
         name: 'verificar',
         description: 'Verificar la integridad matemática y criptográfica de la cadena de bloques',
+        options: [
+          {
+            name: 'eleccion',
+            description: 'Selecciona el proceso electoral (opcional)',
+            type: 3, // STRING
+            required: false,
+            autocomplete: true,
+          }
+        ]
       },
     ];
 

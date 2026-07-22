@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const blockchainController = require('../controllers/blockchain.controller');
-const { requireAuth } = require('../middleware/auth.middleware');
+const { requireAuth, optionalAuth } = require('../middleware/auth.middleware');
 
 // Public / Authenticated endpoints for auditing blockchain
-router.get('/:electionId/blocks', requireAuth, blockchainController.getBlocks);
-router.get('/:electionId/verify', requireAuth, blockchainController.verifyChain);
-router.get('/:electionId/results', requireAuth, blockchainController.getResults);
+router.get('/:electionId/blocks', optionalAuth, blockchainController.getBlocks);
+router.get('/:electionId/verify', optionalAuth, blockchainController.verifyChain);
+router.get('/:electionId/results', optionalAuth, blockchainController.getResults);
 
 module.exports = router;
