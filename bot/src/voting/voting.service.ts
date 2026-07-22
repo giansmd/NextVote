@@ -123,7 +123,7 @@ export class VotingService {
       const res = await axios.get(`${this.apiUrl}/blockchain/${activeElection.id}/results`);
       const { candidates, summary } = res.data;
 
-      let msg = `📊 **Resultados en Tiempo Real - ${activeElection.name}**\n\n`;
+      let msg = `📊 **Resultados - ${activeElection.name}**\n\n`;
       msg += `🔹 **Puntos totales ponderados:** ${summary?.totalWeightedVotes || 0}\n\n`;
 
       if (candidates && candidates.length > 0) {
